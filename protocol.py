@@ -1,38 +1,8 @@
 from struct import pack, unpack
-from bitstring import BitArray, Bits
+from bitstring import BitArray
 
 
 DEBUG = False
-
-
-def tuple_to_int(tuplex):
-    if type(tuplex) == int:
-        return tuplex
-    else:
-        power = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
-        value = 0
-        length = len(tuplex)-1
-        for x in tuplex:
-            if x:
-                value = value + 1*power[length]
-            length = length - 1
-        return value
-
-
-def int_to_tuple(value):
-    word = bin(value)
-    elements = list(word)
-    elements = elements[2:]
-    for x in range(len(elements)):
-        if elements[x] == '1':
-            elements[x] = True
-        else:
-            elements[x] = False
-
-    elen = 4 - len(elements)
-    for xx in range(elen):
-        elements.insert(0, False)
-    return tuple(elements)
 
 
 class BFP:
@@ -40,64 +10,57 @@ class BFP:
     # offset
     offset = BitArray(uint=0, length=1)
 
-    # operacja matematyczna
+    # operation
     operation = ''
 
-    # status/flagi
-    syn = False
-    ack = False
-    fin = False
+    # status
+    status = BitArray(int=0, length=4)
 
-    status = ''
+    # length of data
+    length = 32*3
 
-    # dłygość dancyh
-    length = 32*4
-
-    # dane
-    seq_id = 100
-    ack_id = 101
+    # data
     session_id = 12345
     first = 1
     second = 2
 
-    # nagłowek i dane
+    # header and data wrappers
     header = ''
     data = ''
 
-    def __init__(self, operation="+", status=(False, False, False, False), seq=100, ack=100, session_id=100,
-                 first=0, second=0):
-
+    def __init__(self, operation="+", status=0, session_id=100, extendedarguments=True, first=0, second=0):
         self.operation = operation
-
-        self.syn = status[3]
-        self.ack = status[2]
-        self.fin = status[1]
         self.status = status
-        self.seq_id = seq
-        self.ack_id = ack
         self.session_id = session_id
         self.first = first
         self.second = second
+        self.extendedArguments = extendedarguments
 
-        # pakowanie pakietu po jego utworzeniu
+        # packing after init
         self.pack_packet()
 
     def pack_data(self):
-        self.data = pack("!HHIii", self.seq_id, self.ack_id, self.session_id, self.first, self.second)
+        if not self.extendedArguments:
+            self.data = pack("!ii", self.session_id, self.first)
+        else:
+            self.data = pack("!iii", self.session_id, self.first, self.second)
 
     def unpack_data(self):
-        data = unpack("!HHIii", self.data)
-        self.seq_id = data[0]
-        self.ack_id = data[1]
-        self.session_id = data[2]
-
-        self.first = data[3]
-        self.second = data[4]
+        if not self.extendedArguments:
+            data = unpack("!ii", self.data)
+            self.session_id = data[0]
+            self.first = data[1]
+            self.second = 0
+        else:
+            data = unpack("!iii", self.data)
+            self.session_id = data[0]
+            self.first = data[1]
+            self.second = data[2]
 
     def pack_packet(self):
         self.pack_data()
 
-        # ustawianie operacji
+        # converting operation to bits
         if self.operation == '+':
             operation = BitArray(uint=0, length=3)
         elif self.operation == '-':
@@ -119,12 +82,18 @@ class BFP:
         else:
             raise Exception(f'Nieprawidłowy format operacji: {operation}')
 
-        self.status = (False, self.fin, self.ack, self.syn)
-        status = tuple_to_int(self.status)
-        status = Bits(uint=status, length=4)
+        # converting status to bits
+        status = BitArray(int=self.status, length=4)
+        if not self.extendedArguments:
+            length = 64
+        else:
+            length = 96
 
-        header = operation + status + BitArray(uint=self.length, length=32) + self.offset
+        # assembling header
+        header = operation + status + BitArray(int=length, length=32) + self.offset
         self.header = header.bytes
+
+        # assembling packet
         packet = self.header + self.data
         return packet
 
@@ -138,11 +107,14 @@ class BFP:
             print(header[0:3].uint, header[3:7].uint, header[7:-1].int, int(header[-1]))
 
         operation = header[0:3].uint
-        self.status = int_to_tuple(header[3:7].uint)
-        self.syn = self.status[3]
-        self.ack = self.status[2]
-        self.fin = self.status[1]
+        self.status = header[3:7].int
         self.length = header[7:-1].int
+        if self.length == 96:
+            self.extendedArguments = True
+        elif self.length == 64:
+            self.extendedArguments = False
+        else:
+            raise Exception("Unknown length")
 
         if operation == 0:
             self.operation = '+'
@@ -166,20 +138,25 @@ class BFP:
         self.unpack_data()
 
     def print(self):
-        print(self.operation, (False, self.fin, self.ack, self.syn), self.seq_id, self.ack_id, self.session_id,
-              self.first, self.second)
+        print(self.operation, self.status, self.session_id, self.extendedArguments, self.first, self.second)
 
 
 def main():
     # only for testing
-    f_packet = BFP("/", (False, False, False, True), 22, 0, 1997, 222, 333)
+    f_packet = BFP("/", 7, 1997, True, 1234, 4567)
     f_packet.print()
 
     s_packet = BFP()
     s_packet.parse_data(f_packet.pack_packet())
-    s_packet.ack = True
     s_packet.pack_packet()
     s_packet.print()
+
+    s_packet.extendedArguments = False
+    print("***")
+    s_packet.print()
+
+    f_packet.parse_data(s_packet.pack_packet())
+    f_packet.print()
 
 
 if __name__ == "__main__":
