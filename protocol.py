@@ -5,24 +5,13 @@ from bitstring import BitArray
 DEBUG = False
 
 
-class BFP:
+class Turbo:
 
     # offset
     offset = BitArray(uint=0, length=1)
 
-    # operation
-    operation = ''
-
-    # status
-    status = BitArray(int=0, length=4)
-
     # length of data
     length = 32*3
-
-    # data
-    session_id = 12345
-    first = 1
-    second = 2
 
     # header and data wrappers
     header = ''
@@ -80,7 +69,7 @@ class BFP:
         elif self.operation == '!':
             operation = BitArray(uint=7, length=3)
         else:
-            raise Exception(f'Nieprawidłowy format operacji: {operation}')
+            raise Exception(f'Wrong operation character: {operation}')
 
         # converting status to bits
         status = BitArray(int=self.status, length=4)
@@ -143,10 +132,10 @@ class BFP:
 
 def main():
     # only for testing
-    f_packet = BFP("/", 7, 1997, True, 1234, 4567)
+    f_packet = Turbo("/", 7, 1997, True, 1234, 4567)
     f_packet.print()
 
-    s_packet = BFP()
+    s_packet = Turbo()
     s_packet.parse_data(f_packet.pack_packet())
     s_packet.pack_packet()
     s_packet.print()
