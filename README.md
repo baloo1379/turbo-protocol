@@ -2,15 +2,15 @@
 Simple protocol for CS studies on PUT
 
 Features:
-* connection,
+* connection-oriented,
 * all data sent in binary form,
-* 3 bits operation field,
-* status field with a length of 4 bits,
+* 3-bit operation field,
+* 4-bit status field,
 * 32-bit data length field,
 * variable-size data field,
 * additional fields defined by the programmer, nested in the data field.
 
-1. Operation field - 3-bit field containing information on one of 9 information.
+1. Operation field - 3-bit field containing information on one of 9 mathematical operations.
     * `000` `0` - adding
     * `001` `1` - subtraction
     * `010` `2` - multiplication
@@ -22,7 +22,7 @@ Features:
 
 2. Status field - 4-bit field containing the transmission status.
     * `0001` `1` - a query
-    * `0010` `2` - the result of the action
+    * `0010` `2` - the result of the operation
     * `0011` `3` - the result of factorial
     * `0100` `4` - error - the result is too big
     * `0101` `5` - general error
@@ -32,3 +32,19 @@ Features:
     * session number field - 32 bits
     * field of the first argument - 32 bits
     * field of the second argument - 32 bits
+    
+## Header
+
+|0-2|3-6|7-38|39|
+|:----:|:-----:|:-----:|:-----:|
+|operation|status|length|offset|
+
+## Data
+
+| 0-31 |
+|:----:|
+|session id|
+|first argument|
+|second argument|
+
+
