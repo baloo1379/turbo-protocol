@@ -85,12 +85,12 @@ class BFP:
         # converting status to bits
         status = BitArray(int=self.status, length=4)
         if not self.extendedArguments:
-            length = 64
+            self.length = 64
         else:
-            length = 96
+            self.length = 96
 
         # assembling header
-        header = operation + status + BitArray(int=length, length=32) + self.offset
+        header = operation + status + BitArray(int=self.length, length=32) + self.offset
         self.header = header.bytes
 
         # assembling packet
