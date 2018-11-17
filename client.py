@@ -1,7 +1,7 @@
 import socket
 import random
-
 from protocol import Turbo
+
 
 DEBUG = True
 
@@ -14,6 +14,8 @@ def debugger(msg):
 if __name__ == "__main__":
     HOST = 'localhost'
     PORT = 9999
+    tur = Turbo()
+    turbo_received = Turbo()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         while True:
@@ -39,25 +41,29 @@ if __name__ == "__main__":
             sign = input()
 
             temp_items = [sign, first, second]
-
-            rand = random.randrange(1,1024)
+            debugger(temp_items)
+            rand = random.randrange(1, 1024)
+            debugger("rand: " + str(rand))
 
             tur = Turbo(temp_items[0], 1, rand, True, temp_items[1], temp_items[2])
-            s.send(tur.pack_packet())
+            tur.pack_packet()
+            debugger("Packet: " + tur.print())
+            s.sendall(tur.pack_packet())
             #Odbieranie
-            data_received = s.recv(1024)
-            turbo_received = Turbo()
-            turbo_received = turbo_received.parse_data(data_received)
+            data_received = s.recv(8192)
+            turbo_received.parse_data(data_received)
 
             if turbo_received.session_id == rand:
                 print(turbo_received.first)
 
             else:
                 print("different session id than sent")
+
             if data_received == "EXIT" or data_received == "Exit" or data_received == "exit":
                 s.shutdown(socket.SHUT_RDWR)
                 print("exiting succesful")
                 break
             else:
                 print('Received', repr(data_received))
+
         debugger("wyszełem z while")

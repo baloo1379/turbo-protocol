@@ -127,7 +127,9 @@ class Turbo:
         self.unpack_data()
 
     def print(self):
-        print(self.operation, self.status, self.session_id, self.extendedArguments, self.first, self.second)
+        if DEBUG:
+            print(self.operation, self.status, self.session_id, self.extendedArguments, self.first, self.second)
+        return str(f"{self.operation}, {self.status}, {self.session_id}, {self.extendedArguments}, {self.first}, {self.second}")
 
 
 def main():

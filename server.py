@@ -27,8 +27,9 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
         session_id = -1
 
         while True:
+            debugger("Waiting for client")
             try:
-                data = self.request.recv(1024)
+                data = self.request.recv(8192)
             except OSError as msg:
                 print(f'Something went wrong: {msg.strerror}, code: [{msg.errno}], address: {self.client_address}')
                 self.request.close()
@@ -38,7 +39,9 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                 debugger("Empty data")
                 break
 
-            packet = packet.parse_data(data)
+            old_packet = copy.copy(packet)
+            packet.parse_data(data)
+            debugger(packet.print())
 
             # checking if session is correct
             if packet.session_id != session_id:
@@ -96,9 +99,10 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
                 # if there is no errors send packet
                 if errors == 0:
+                    debugger("No errors. Sending")
                     packet.status = 2
                     old_packet = copy.copy(packet)
-                    self.request.send(packet.pack_packet())
+                    self.request.sendall(packet.pack_packet())
                 else:
                     # otherwise handle errors
                     debugger(f"Errors: {errors}")
