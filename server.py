@@ -8,7 +8,7 @@ DEBUG = True
 class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
-        print("Entered handle")
+        print("Connected")
         while True:
             data = self.request.recv(4096)
             word = data.decode()
@@ -27,4 +27,5 @@ if __name__ == "__main__":
     HOST, PORT = "localhost", 9999
 
     with socketserver.TCPServer((HOST, PORT), TurboProtocolTCPHandler) as server:
+        print("Server started")
         server.serve_forever(5.0)
