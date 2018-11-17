@@ -1,6 +1,6 @@
 import socket
 
-HOST = 'daring.cwi.nl'
+HOST = 'localhost'
 PORT = 9999
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
