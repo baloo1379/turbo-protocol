@@ -23,9 +23,9 @@ Features:
 2. Status field - 4-bit field containing the transmission status.
     * `0001` `1` - a query
     * `0010` `2` - the result of the operation
-    * `0011` `3` - the result of factorial
+    * `0011` `3` - general error
     * `0100` `4` - error - the result is too big
-    * `0101` `5` - general error
+    * `0101` `5` - error - wrong status
 
 3. Data length field - a 32-bit field containing information about the length of the data field.
 4. Data field - the field where the information is located:

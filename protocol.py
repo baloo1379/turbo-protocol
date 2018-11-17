@@ -123,8 +123,6 @@ class Turbo:
             self.operation = 'AND'
         elif operation == 7:
             self.operation = 'NOT'
-        elif operation == 7:
-            self.operation = '!'
 
         self.unpack_data()
 
@@ -134,7 +132,7 @@ class Turbo:
 
 def main():
     # only for testing
-    f_packet = Turbo("/", 7, 1997, True, 1234, 4567)
+    f_packet = Turbo("/", 7, 1997, True,  -2147483648, 2147483647)
     f_packet.print()
 
     s_packet = Turbo()
