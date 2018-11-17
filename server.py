@@ -8,19 +8,16 @@ DEBUG = True
 class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
-        print("Connected")
-        while True:
-            data = self.request.recv(4096)
-            word = data.decode()
-            if word == "\r\n":
-                print("ENTER")
-                continue
-            elif word == "":
-                break
+        if DEBUG:
+            print("Handle")
 
-            print(word)
-            word = word + "\r\n"
-            self.request.sendall(word.encode())
+        data = self.request.recv(4096)
+        word = data.decode()
+        if word == "":
+            return
+        word = word.upper()
+        print(word)
+        self.request.sendall(word.encode())
 
 
 if __name__ == "__main__":
