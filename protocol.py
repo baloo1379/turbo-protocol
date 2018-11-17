@@ -69,7 +69,7 @@ class Turbo:
         elif self.operation == '!':
             operation = BitArray(uint=7, length=3)
         else:
-            raise Exception(f'Wrong operation character: {operation}')
+            raise Exception(f'Wrong operation character: {self.operation}')
 
         # converting status to bits
         status = BitArray(int=self.status, length=4)
