@@ -10,14 +10,22 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
     def handle(self):
         if DEBUG:
             print("Handle")
+        print("Connected")
 
-        data = self.request.recv(1024)
-        word = data.decode()
-        if word is None:
-            return
-        word = word.upper()
-        print(word)
-        self.request.sendall(word.encode())
+        while True:
+            data = self.request.recv(1024)
+            word = data.decode()
+            if word is "":
+                if DEBUG:
+                    print("Empty string")
+                print("Quiting")
+                break
+            word = word.upper()
+            print(word)
+            self.request.sendall(word.encode())
+
+        if DEBUG:
+            print("Handled")
 
 
 if __name__ == "__main__":
@@ -25,4 +33,4 @@ if __name__ == "__main__":
 
     with socketserver.TCPServer((HOST, PORT), TurboProtocolTCPHandler) as server:
         print("Server started")
-        server.serve_forever(5.0)
+        server.handle_request()
