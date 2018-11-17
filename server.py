@@ -11,9 +11,9 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
         if DEBUG:
             print("Handle")
 
-        data = self.request.recv(4096)
+        data = self.request.recv(1024)
         word = data.decode()
-        if word == "":
+        if word is None:
             return
         word = word.upper()
         print(word)
