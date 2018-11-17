@@ -5,27 +5,37 @@ from protocol import Turbo
 DEBUG = True
 
 
+def debugger(msg):
+    if DEBUG:
+        print("DEBUG:", msg)
+
+
 class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
-        if DEBUG:
-            print("Handle")
+        debugger("Handle")
         print("Connected")
+        protocol = Turbo()
 
         while True:
-            data = self.request.recv(1024)
-            word = data.decode()
-            if word is "":
-                if DEBUG:
-                    print("Empty string")
-                print("Quiting")
+            try:
+                data = self.request.recv(1024)
+            except OSError as msg:
+                print(f'Something went wrong: {msg.strerror}, code: [{msg.errno}], address: {self.client_address}')
+                self.request.close()
                 break
+
+            if not data:
+                debugger("Empty data")
+                break
+
+            protocol = protocol.parse_data(data)
             word = word.upper()
             print(word)
             self.request.sendall(word.encode())
 
-        if DEBUG:
-            print("Handled")
+        debugger("Handled")
+        print("Disconnected")
 
 
 if __name__ == "__main__":
@@ -33,4 +43,4 @@ if __name__ == "__main__":
 
     with socketserver.TCPServer((HOST, PORT), TurboProtocolTCPHandler) as server:
         print("Server started")
-        server.handle_request()
+        server.serve_forever()

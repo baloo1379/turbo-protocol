@@ -2,7 +2,7 @@ from struct import pack, unpack
 from bitstring import BitArray
 
 
-DEBUG = True
+DEBUG = False
 
 
 class Turbo:
