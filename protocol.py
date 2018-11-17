@@ -2,7 +2,7 @@ from struct import pack, unpack
 from bitstring import BitArray
 
 
-DEBUG = False
+DEBUG = True
 
 
 class Turbo:
@@ -84,6 +84,8 @@ class Turbo:
 
         # assembling packet
         packet = self.header + self.data
+        if DEBUG:
+            print("packet:", packet)
         return packet
 
     def parse_data(self, data):
@@ -92,8 +94,8 @@ class Turbo:
         self.data = self.data[40:].bytes
 
         if DEBUG:
-            print(header.bin, data)
-            print(header[0:3].uint, header[3:7].uint, header[7:-1].int, int(header[-1]))
+            print("header + data:", header.bin, data)
+            print("header values:", header[0:3].uint, header[3:7].uint, header[7:-1].int, int(header[-1]))
 
         operation = header[0:3].uint
         self.status = header[3:7].int
@@ -136,12 +138,14 @@ def main():
     f_packet.print()
 
     s_packet = Turbo()
+    print(len(f_packet.pack_packet()))
     s_packet.parse_data(f_packet.pack_packet())
-    s_packet.pack_packet()
+    print(len(s_packet.pack_packet()))
     s_packet.print()
 
     s_packet.extendedArguments = False
     print("***")
+    print(len(s_packet.pack_packet()))
     s_packet.print()
 
     f_packet.parse_data(s_packet.pack_packet())
