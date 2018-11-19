@@ -51,6 +51,9 @@ if __name__ == "__main__":
                         if int(eq[0]) > MAX or int(eq[0]) < MIN:
                             print("number is too big! expected number between -2147483648 and 2147483647 ")
                             continue
+                elif len(eq) < 2:
+                    print("Too few arguments, should be at least 2")
+                    continue
             except ValueError:
                 print("That is not valid number.")
                 continue
