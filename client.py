@@ -18,31 +18,51 @@ if __name__ == "__main__":
     turbo_received = Turbo()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
+
+        rand = random.randrange(1, 1024)
         while True:
 
             #Wysyłanie
-            print("Please write 1st number: ")
-            first = input()
-            first = int(first)
-            if first > 2147483647 or first < -2147483648:
-                print("number is too big! expected number between -2147483648 and 2147483647 ")
-                print("\ngive another number: ")
-                first = input()
-                first = int(first)
-            print("\nPlease write second number: ")
-            second = input()
-            second = int(second)
-            if second > 2147483647 or second < -2147483648:
-                print("number is too big! expected number between -2147483648 and 2147483647 ")
-                print("\ngive another number: ")
-                second = input()
-                second = int(second)
-            print("\nPlease write sign of the activity: ")
-            sign = input()
+            eq = input()
+            if eq == "EXIT" or eq == "Exit" or eq == "exit":
+                s.shutdown(socket.SHUT_RDWR)
+                print("exiting succesful")
+                break
+
+            eq = eq.split(" ")
+            if len(eq) > 3:
+                print("Too many arguments. Expected 3 arguments. ")
+                continue
+            elif len(eq) == 3:
+                if int(eq[0]) > 2147483647 or int(eq[0]) < -2147483648 or int(eq[2]) > 2147483647 or int(eq[2]) < -2147483648:
+                    print("number is too big! expected number between -2147483648 and 2147483647 ")
+                    continue
+                else:
+                    first = int(eq[0])
+                    second = int(eq[2])
+                    sign = eq[1]
+            elif len(eq) == 2:
+                if type(eq[0])== int and (eq[1]=="!" or  eq[1]=="NOT"):
+                    if int(eq[0]) > 2147483647 or int(eq[0]) < -2147483648:
+                        print("number is too big! expected number between -2147483648 and 2147483647 ")
+                        continue
+                    else:
+                        sign = eq[1]
+                        first = int(eq[0])
+                        second = 0
+                if type(eq[1])== int and (eq[0]=="!" or  eq[0]=="NOT"):
+                    if int(eq[1]) > 2147483647 or int(eq[1]) < -2147483648:
+                        print("number is too big! expected number between -2147483648 and 2147483647 ")
+                        continue
+                    else:
+                        sign = eq[1]
+                        first = int(eq[0])
+                        second = 0
+
 
             temp_items = [sign, first, second]
             debugger(temp_items)
-            rand = random.randrange(1, 1024)
+
             debugger("rand: " + str(rand))
 
             tur = Turbo(temp_items[0], 1, rand, True, temp_items[1], temp_items[2])
@@ -53,17 +73,26 @@ if __name__ == "__main__":
             data_received = s.recv(8192)
             turbo_received.parse_data(data_received)
 
+#sprawdzisc status czy jest to 2 nagranie 50s
             if turbo_received.session_id == rand:
-                print(turbo_received.first)
-
+                if turbo_received.status == 2:
+                    if sign == "!":
+                        print(turbo_received.second)
+                    elif sign == "NOT":
+                        print(turbo_received.first)
+                    else:
+                        print(turbo_received.first)
+                elif turbo_received.status == 3:
+                    print("general error")
+                    continue
+                elif turbo_received.status == 4:
+                    print("error, result is too big")
+                elif turbo_received.status == 5:
+                    print("error, wrong status")
             else:
                 print("different session id than sent")
 
-            if data_received == "EXIT" or data_received == "Exit" or data_received == "exit":
-                s.shutdown(socket.SHUT_RDWR)
-                print("exiting succesful")
-                break
-            else:
-                print('Received', repr(data_received))
+
+
 
         debugger("wyszełem z while")
