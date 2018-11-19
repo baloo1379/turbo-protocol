@@ -31,26 +31,29 @@ if __name__ == "__main__":
                 break
 
             eq = eq.split(" ")
-            if len(eq) > 3:
-                print("Too many arguments. Expected 3 arguments. ")
-                continue
-            elif len(eq) == 3:
-                first = int(eq[0])
-                second = int(eq[2])
-                sign = eq[1]
-                if first > MAX or first < MIN or second > MAX or second < MIN:
-                    print("number is too big! expected number between -2147483648 and 2147483647 ")
+            try:
+                if len(eq) > 3:
+                    print("Too many arguments. Expected 3 arguments. ")
                     continue
-
-            elif len(eq) == 2:
-                sign = eq[1]
-                first = int(eq[0])
-                second = 0
-                if type(eq[0]) == int and (eq[1] == "!" or  eq[1] == "NOT"):
-                    if int(eq[0]) > MAX or int(eq[0]) < MIN:
+                elif len(eq) == 3:
+                    first = int(eq[0])
+                    second = int(eq[2])
+                    sign = eq[1]
+                    if first > MAX or first < MIN or second > MAX or second < MIN:
                         print("number is too big! expected number between -2147483648 and 2147483647 ")
                         continue
 
+                elif len(eq) == 2:
+                    sign = eq[1]
+                    first = int(eq[0])
+                    second = 0
+                    if type(eq[0]) == int and (eq[1] == "!" or  eq[1] == "NOT"):
+                        if int(eq[0]) > MAX or int(eq[0]) < MIN:
+                            print("number is too big! expected number between -2147483648 and 2147483647 ")
+                            continue
+            except ValueError:
+                print("That is not valid number.")
+                continue
 
             temp_items = [sign, first, second]
             debugger(temp_items)
@@ -65,7 +68,7 @@ if __name__ == "__main__":
             data_received = s.recv(8192)
             turbo_received.parse_data(data_received)
 
-#sprawdzisc status czy jest to 2 nagranie 50s
+
             if turbo_received.session_id == rand:
                 if turbo_received.status == 2:
                     if sign == "!":
@@ -83,8 +86,6 @@ if __name__ == "__main__":
                     print("error, wrong status")
             else:
                 print("different session id than sent")
-
-
 
 
         debugger("wyszełem z while")
