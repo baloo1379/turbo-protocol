@@ -7,6 +7,7 @@ DEBUG = True
 MIN = -2147483648
 MAX = 2147483647
 
+
 def debugger(msg):
     if DEBUG:
         print("DEBUG:", msg)
@@ -23,7 +24,7 @@ if __name__ == "__main__":
         rand = random.randrange(1, 1024)
         while True:
 
-            #Wysyłanie
+            # Wysyłanie
             print("Please always write sign after first number and all separated space: ")
             eq = input()
             if eq == "EXIT" or eq == "Exit" or eq == "exit":
@@ -52,7 +53,6 @@ if __name__ == "__main__":
                         print("number is too big! expected number between -2147483648 and 2147483647 ")
                         continue
 
-
             temp_items = [sign, first, second]
             debugger(temp_items)
 
@@ -62,11 +62,12 @@ if __name__ == "__main__":
             tur.pack_packet()
             debugger("Packet: " + tur.print())
             s.sendall(tur.pack_packet())
-            #Odbieranie
+
+            # Odbieranie
             data_received = s.recv(8192)
             turbo_received.parse_data(data_received)
 
-#sprawdzisc status czy jest to 2 nagranie 50s
+            # sprawdzisc status czy jest to 2 nagranie 50s
             if turbo_received.session_id == rand:
                 if turbo_received.status == 2:
                     if sign == "!":
