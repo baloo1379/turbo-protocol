@@ -19,12 +19,11 @@ if __name__ == "__main__":
     turbo_received = Turbo()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
-
+        print("Please always write sign after first number and all separated space: ")
         rand = random.randrange(1, 1024)
         while True:
 
             #Wysyłanie
-            print("Please always write sign after first number and all separated space: ")
             eq = input()
             if eq == "EXIT" or eq == "Exit" or eq == "exit":
                 s.shutdown(socket.SHUT_RDWR)
