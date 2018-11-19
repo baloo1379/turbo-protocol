@@ -84,8 +84,9 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                 elif packet.operation == 'AND':
                     packet.first = packet.first & packet.second
                 elif packet.operation == 'NOT':
+                    packet.second = factorial(packet.first)
                     packet.first = ~packet.first
-                    packet.second = factorial(packet.second)
+
                     # unless the operation is logic not or factorial
                     packet.extendedArgument = True
 
