@@ -9,39 +9,48 @@ MIN_INT = -2147483648
 
 GENERAL_ERROR = Turbo("+", 3, 0, False, 0, 0)
 SIZE_ERROR = Turbo("+", 4, 0, False, 0, 0)
-STATUS_ERROR = Turbo("+", 5, 0, False, 0 ,0)
+STATUS_ERROR = Turbo("+", 5, 0, False, 0, 0)
 
 
-def debugger(msg):
+def debugger(*msgs):
     if DEBUG:
-        print("DEBUG:", msg)
+        for msg in msgs:
+            print("DEBUG:", msg)
 
 
 class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
-        debugger("Handle")
-        print("Connected")
+        debugger("handle entered")
+        print("Connected from", self.client_address[0], "on port", self.client_address[1])
         packet = Turbo()
-        errors = 0
         session_id = -1
 
         while True:
-            debugger("Waiting for client")
+            debugger("waiting for client")
             try:
                 data = self.request.recv(8192)
+                debugger("data received")
             except OSError as msg:
                 print(f'Something went wrong: {msg.strerror}, code: [{msg.errno}], address: {self.client_address}')
                 self.request.close()
                 break
 
             if not data:
-                debugger("Empty data")
+                debugger("empty data")
                 break
 
+            errors = 0
             old_packet = copy.copy(packet)
-            packet.parse_data(data)
-            debugger(packet.print())
+            debugger("length of raw data: "+str(len(data)))
+            try:
+                packet.parse_data(data)
+            except ValueError as msg:
+                debugger("parsing error")
+                print(f'Something went wrong: {msg}')
+                continue
+
+            debugger("packet", packet.print())
 
             # checking if session is correct
             if packet.session_id != session_id:
@@ -67,7 +76,7 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
                 # response will be only one argument
                 #  unless the operation is not or factorial
-                packet.extendedArgument = False
+                packet.set_length(False)
 
                 if packet.operation == '+':
                     packet.first = packet.first + packet.second
@@ -85,10 +94,9 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                     packet.first = packet.first & packet.second
                 elif packet.operation == 'NOT':
                     packet.second = factorial(packet.first)
-                    packet.first = ~packet.first
-
+                    packet.first = -packet.first
                     # unless the operation is logic not or factorial
-                    packet.extendedArgument = True
+                    packet.set_length(True)
 
                 # checking if result isnt too big or too small
                 if packet.first > MAX_INT or packet.second > MAX_INT:
@@ -103,6 +111,9 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                     debugger("No errors. Sending")
                     packet.status = 2
                     old_packet = copy.copy(packet)
+                    debugger(packet.extendedArguments)
+                    debugger(packet.length)
+                    debugger("len: " + str(len(packet.pack_packet())))
                     self.request.sendall(packet.pack_packet())
                 else:
                     # otherwise handle errors
@@ -113,6 +124,7 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                     packet.extendedArgument = False
                     # send error
                     old_packet = copy.copy(packet)
+                    debugger("len: " + str(len(packet.pack_data())))
                     self.request.send(packet.pack_packet())
 
         debugger("Handled")
