@@ -1,10 +1,15 @@
 import socketserver
 import socket
-from protocol import Turbo, OPERATORS
-from math import factorial, pow, log, fabs
 import copy
+import sys
+from math import factorial, pow, log, fabs
+from protocol import Turbo, OPERATORS
+
 
 DEBUG = False
+
+HOST, PORT = "localhost", 9999
+
 MAX_INT = 2147483647
 MIN_INT = -2147483648
 
@@ -171,8 +176,15 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 9999
-
-    with socketserver.TCPServer((HOST, PORT), TurboProtocolTCPHandler) as server:
+    args = sys.argv
+    host = args[1] if len(args) > 1 else HOST
+    port = int(args[2]) if len(args) > 2 else PORT
+    forever = bool(args[3]) if len(args) > 3 else False
+    with socketserver.TCPServer((host, port), TurboProtocolTCPHandler) as server:
         print("Server started")
-        server.serve_forever()
+        if forever:
+            server.serve_forever()
+        else:
+            server.handle_request()
+    input("Press ENTER to continue...")
+    sys.exit()

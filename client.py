@@ -1,9 +1,13 @@
 import socket
 import random
+import sys
 from protocol import Turbo, OPERATORS
 
 
 DEBUG = False
+
+HOST, PORT = "localhost", 9999
+
 MIN = -2147483648
 MAX = 2147483647
 
@@ -16,9 +20,9 @@ def debugger(*msgs):
         print(result)
 
 
-def main():
-    host = 'localhost'
-    port = 9999
+def client(host, port):
+    host = host
+    port = port
     addr = (host, port)
     tur = Turbo()
     turbo_received = Turbo()
@@ -87,7 +91,7 @@ def main():
                 s.sendall(tur.pack_packet())
 
                 # Odbieranie
-                data_received = s.recv(8192)
+                data_received = s.recv(128)
                 turbo_received.parse_data(data_received)
 
                 if turbo_received.session_id == rand:
@@ -123,5 +127,10 @@ def main():
 
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 9999
-    main()
+    args = sys.argv
+    host = args[1] if len(args) > 1 else HOST
+    port = int(args[2]) if len(args) > 2 else PORT
+
+    client(host, port)
+    input("Press ENTER to continue...")
+    sys.exit()
