@@ -1,4 +1,5 @@
 import socketserver
+import socket
 from protocol import Turbo
 from math import factorial
 import copy
@@ -14,15 +15,18 @@ STATUS_ERROR = Turbo("+", 5, 0, False, 0, 0)
 
 def debugger(*msgs):
     if DEBUG:
-        for msg in msgs:
-            print("DEBUG:", msg)
+        result = "DEBUG:"
+        for el in msgs:
+            result += " "+str(el)
+        print(result)
 
 
 class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
         debugger("handle entered")
-        print("Connected from", self.client_address[0], "on port", self.client_address[1])
+        print("Connected with", socket.gethostbyaddr(self.client_address[0])[0], "from", self.client_address[0],
+              "on port", self.client_address[1])
         packet = Turbo()
         session_id = -1
 
@@ -42,7 +46,7 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
             errors = 0
             old_packet = copy.copy(packet)
-            debugger("length of raw data: "+str(len(data)))
+            debugger("length of raw data:", str(len(data)))
             try:
                 packet.parse_data(data)
             except ValueError as msg:
@@ -50,7 +54,7 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                 print(f'Something went wrong: {msg}')
                 continue
 
-            debugger("packet", packet.print())
+            debugger("packet:", packet.print())
 
             # checking if session is correct
             if packet.session_id != session_id:
@@ -93,39 +97,62 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                 elif packet.operation == 'AND':
                     packet.first = packet.first & packet.second
                 elif packet.operation == 'NOT':
-                    packet.second = factorial(packet.first)
-                    packet.first = -packet.first
                     # unless the operation is logic not or factorial
-                    packet.set_length(True)
+                    if packet.first > 0:
+                        packet.second = factorial(packet.first)
+                        packet.set_length(True)
+                    else:
+                        errors = 6
+                    packet.first = -packet.first
 
-                # checking if result isnt too big or too small
-                if packet.first > MAX_INT or packet.second > MAX_INT:
+
+
+                # checking if result isn't too big or too small
+                if packet.first > MAX_INT:
                     debugger("Result too big for 32bit int")
-                    errors += 1
-                if packet.first < MIN_INT or packet.second < MIN_INT:
+                    errors = 4
+                if packet.first < MIN_INT:
                     debugger("Result too small for 32bit int")
-                    errors += 1
+                    errors = 4
+                if packet.second > MAX_INT:
+                    debugger("Factorial too big for 32bit int")
+                    errors = 6
+                if packet.second < MIN_INT:
+                    debugger("Factorial too small for 32bit int")
+                    errors = 6
 
-                # if there is no errors send packet
+                # if there is no errors prepare packet
                 if errors == 0:
                     debugger("No errors. Sending")
                     packet.status = 2
                     old_packet = copy.copy(packet)
                     debugger(packet.extendedArguments)
                     debugger(packet.length)
-                    debugger("len: " + str(len(packet.pack_packet())))
-                    self.request.sendall(packet.pack_packet())
-                else:
+
+                elif errors == 4:
                     # otherwise handle errors
-                    debugger(f"Errors: {errors}")
+                    debugger(f"Errors code:", errors)
                     packet.status = 4
                     packet.first = 0
                     packet.second = 0
-                    packet.extendedArgument = False
+                    packet.set_length(False)
                     # send error
                     old_packet = copy.copy(packet)
-                    debugger("len: " + str(len(packet.pack_data())))
-                    self.request.send(packet.pack_packet())
+                    debugger("error packet:", packet.print(), packet.pack_packet())
+
+                elif errors == 6:
+                    # otherwise handle errors
+                    debugger(f"Errors code:", errors)
+                    packet.status = 6
+                    packet.second = 0
+                    packet.set_length(False)
+                    # send error
+                    old_packet = copy.copy(packet)
+                    debugger("error packet:", packet.print(), packet.pack_packet())
+
+                debugger("len: " + str(len(packet.pack_packet())))
+                debugger("send packet:", packet.print())
+                self.request.sendall(packet.pack_packet())
 
         debugger("Handled")
         print("Disconnected")
