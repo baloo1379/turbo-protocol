@@ -15,10 +15,10 @@ Features:
     * `001` `1` - subtraction
     * `010` `2` - multiplication
     * `011` `3` - dividing
-    * `100` `4` - OR
-    * `101` `5` - XOR
-    * `110` `6` - AND
-    * `111` `7` - NOT and factorial (first argument NOT, second factorial)
+    * `100` `4` - modulo
+    * `101` `5` - power
+    * `110` `6` - logarithm 
+    * `111` `7` - absolute and factorial (first argument absolute, second factorial)
 
 2. Status field - 4-bit field containing the transmission status.
     * `0001` `1` - a query
