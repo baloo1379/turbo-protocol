@@ -3,7 +3,7 @@ from bitstring import BitArray
 
 
 DEBUG = False
-
+OPERATORS = ["+", "-", "*", "/", "%", "^", "log", "abs", "!"]
 
 class Turbo:
 
@@ -57,26 +57,26 @@ class Turbo:
         self.pack_data()
 
         # converting operation to bits
-        if self.operation == '+':
+        if self.operation == OPERATORS[0]:
             operation = BitArray(uint=0, length=3)
-        elif self.operation == '-':
+        elif self.operation == OPERATORS[1]:
             operation = BitArray(uint=1, length=3)
-        elif self.operation == '*':
+        elif self.operation == OPERATORS[2]:
             operation = BitArray(uint=2, length=3)
-        elif self.operation == '/':
+        elif self.operation == OPERATORS[3]:
             operation = BitArray(uint=3, length=3)
-        elif self.operation == 'OR':
+        elif self.operation == OPERATORS[4]:
             operation = BitArray(uint=4, length=3)
-        elif self.operation == 'XOR':
+        elif self.operation == OPERATORS[5]:
             operation = BitArray(uint=5, length=3)
-        elif self.operation == 'AND':
+        elif self.operation == OPERATORS[6]:
             operation = BitArray(uint=6, length=3)
-        elif self.operation == 'NOT':
+        elif self.operation == OPERATORS[7]:
             operation = BitArray(uint=7, length=3)
-        elif self.operation == '!':
+        elif self.operation == OPERATORS[8]:
             operation = BitArray(uint=7, length=3)
         else:
-            raise ValueError(f'Wrong operation character: {self.operation}')
+            raise ValueError(f'Wrong operation sign: {self.operation}')
 
         # converting status to bits
         status = BitArray(int=self.status, length=4)
@@ -118,23 +118,23 @@ class Turbo:
             raise ValueError("Unknown length")
 
         if operation == 0:
-            self.operation = '+'
+            self.operation = OPERATORS[0]
         elif operation == 1:
-            self.operation = '-'
+            self.operation = OPERATORS[1]
         elif operation == 2:
-            self.operation = '*'
+            self.operation = OPERATORS[2]
         elif operation == 3:
-            self.operation = '/'
+            self.operation = OPERATORS[3]
         elif operation == 4:
-            self.operation = 'OR'
+            self.operation = OPERATORS[4]
         elif operation == 5:
-            self.operation = 'XOR'
+            self.operation = OPERATORS[5]
         elif operation == 6:
-            self.operation = 'AND'
+            self.operation = OPERATORS[6]
         elif operation == 7:
-            self.operation = 'NOT'
+            self.operation = OPERATORS[7]
         else:
-            raise ValueError(f'Wrong operation data')
+            raise ValueError(f'Wrong operation sign')
 
         self.unpack_data()
 
@@ -146,9 +146,17 @@ class Turbo:
 
 def main():
     # only for testing
-    f_packet = Turbo("/", 7, 1997, True,  -2147483648, 2147483647)
+    f_packet = Turbo("+", 7, 1997, True, 564, 85)
+    x2 = Turbo("-", 7, 1997, True, 452, 654)
+    x3 = Turbo("*", 7, 1997, True, 15, 5)
+    x4 = Turbo("/", 7, 1997, True, 25, 5)
+    x5 = Turbo("%", 7, 1997, True, 25, 6)
+    x6 = Turbo("^", 7, 1997, True, 2, 8)
+    x7 = Turbo("log", 7, 1997, True, 3, 8)
+    x8 = Turbo("abs", 7, 1997, False, 25, 0)
+    x9 = Turbo("abs", 7, 1997, True, 0, 5)
+
     f_packet.print()
-    print(f_packet.pack_packet())
     s_packet = Turbo()
     print(len(f_packet.pack_packet()))
     s_packet.parse_data(f_packet.pack_packet())

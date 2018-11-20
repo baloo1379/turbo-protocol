@@ -1,6 +1,6 @@
 import socket
 import random
-from protocol import Turbo
+from protocol import Turbo, OPERATORS
 
 
 DEBUG = False
@@ -55,12 +55,16 @@ def main():
 
                     elif len(eq) == 2:
                         sign = eq[1]
-                        first = int(eq[0])
-                        second = 0
-                        if type(eq[0]) == int and (eq[1] == "!" or  eq[1] == "NOT"):
-                            if int(eq[0]) > MAX or int(eq[0]) < MIN:
-                                print("number is too big! expected number between -2147483648 and 2147483647 ")
-                                continue
+                        if sign == OPERATORS[7] or sign == OPERATORS[8]:
+                            first = int(eq[0])
+                            second = 0
+                            if type(eq[0]) == int and (eq[1] == "!" or  eq[1] == "NOT"):
+                                if int(eq[0]) > MAX or int(eq[0]) < MIN:
+                                    print("number is too big! expected number between -2147483648 and 2147483647 ")
+                                    continue
+                        else:
+                            print("Too few arguments, expected 3 arguments.")
+                            continue
                     elif len(eq) < 2:
                         print("Too few arguments, should be at least 2")
                         continue
@@ -73,8 +77,12 @@ def main():
 
                 debugger("rand: " + str(rand))
 
-                tur = Turbo(temp_items[0], 1, rand, True, temp_items[1], temp_items[2])
-                tur.pack_packet()
+                try:
+                    tur = Turbo(temp_items[0], 1, rand, True, temp_items[1], temp_items[2])
+                except ValueError as sign_error:
+                    print(f'Something went wrong: {sign_error}')
+                    continue
+
                 debugger("Packet: " + tur.print())
                 s.sendall(tur.pack_packet())
 
@@ -86,7 +94,7 @@ def main():
                     if turbo_received.status == 2:
                         if sign == "!":
                             print(turbo_received.second)
-                        elif sign == "NOT":
+                        elif sign == "abs":
                             print(turbo_received.first)
                         else:
                             print(turbo_received.first)
@@ -101,10 +109,12 @@ def main():
                         debugger("error, factorial result too big, but still have NOT result")
                         if sign == "!":
                             print("error, can't calculate factorial from given argument")
-                        elif sign == "NOT":
+                        elif sign == "abs":
                             print(turbo_received.first)
                         else:
                             print(turbo_received.first)
+                    elif turbo_received.status == 7:
+                        print("error, division by 0")
                 else:
                     print("different session id than sent")
 

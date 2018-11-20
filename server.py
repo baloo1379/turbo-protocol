@@ -1,10 +1,10 @@
 import socketserver
 import socket
-from protocol import Turbo
-from math import factorial
+from protocol import Turbo, OPERATORS
+from math import factorial, pow, log, fabs
 import copy
 
-DEBUG = True
+DEBUG = False
 MAX_INT = 2147483647
 MIN_INT = -2147483648
 
@@ -82,30 +82,31 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                 #  unless the operation is not or factorial
                 packet.set_length(False)
 
-                if packet.operation == '+':
+                if packet.operation == OPERATORS[0]:
                     packet.first = packet.first + packet.second
-                elif packet.operation == '-':
+                elif packet.operation == OPERATORS[1]:
                     packet.first = packet.first - packet.second
-                elif packet.operation == '*':
+                elif packet.operation == OPERATORS[2]:
                     packet.first = packet.first * packet.second
-                elif packet.operation == '/':
-                    packet.first = int(packet.first / packet.second)
-                elif packet.operation == 'OR':
-                    packet.first = packet.first | packet.second
-                elif packet.operation == 'XOR':
-                    packet.first = packet.first ^ packet.second
-                elif packet.operation == 'AND':
-                    packet.first = packet.first & packet.second
-                elif packet.operation == 'NOT':
-                    # unless the operation is logic not or factorial
+                elif packet.operation == OPERATORS[3]:
+                    if packet.second == 0:
+                        errors = 7
+                    else:
+                        packet.first = int(packet.first / packet.second)
+                elif packet.operation == OPERATORS[4]:
+                    packet.first = int(packet.first % packet.second)
+                elif packet.operation == OPERATORS[5]:
+                    packet.first = int(pow(packet.first, packet.second))
+                elif packet.operation == OPERATORS[6]:
+                    packet.first = int(log(packet.second, packet.first))
+                elif packet.operation == OPERATORS[7]:
+                    # unless the operation is abs or factorial
                     if packet.first > 0:
                         packet.second = factorial(packet.first)
                         packet.set_length(True)
                     else:
                         errors = 6
-                    packet.first = -packet.first
-
-
+                    packet.first = int(fabs(packet.first))
 
                 # checking if result isn't too big or too small
                 if packet.first > MAX_INT:
@@ -144,6 +145,17 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                     # otherwise handle errors
                     debugger(f"Errors code:", errors)
                     packet.status = 6
+                    packet.second = 0
+                    packet.set_length(False)
+                    # send error
+                    old_packet = copy.copy(packet)
+                    debugger("error packet:", packet.print(), packet.pack_packet())
+
+                elif errors == 7:
+                    # otherwise handle errors
+                    debugger(f"Errors code:", errors)
+                    packet.status = 7
+                    packet.first = 0
                     packet.second = 0
                     packet.set_length(False)
                     # send error
