@@ -158,6 +158,7 @@ def main():
 
     f_packet.print()
     s_packet = Turbo()
+    print(f_packet.pack_packet())
     print(len(f_packet.pack_packet()))
     s_packet.parse_data(f_packet.pack_packet())
     print(len(s_packet.pack_packet()))
@@ -172,5 +173,19 @@ def main():
     f_packet.print()
 
 
+def translate():
+    data = input()
+    str_data = data.split(",")
+    print(str_data)
+    raw_data = list()
+    for el in str_data:
+        raw_data.append(int(el[3:], 16))
+    x = bytes(raw_data)
+    print(x)
+    packet = Turbo()
+    packet.parse_data(x)
+    print(packet.print())
+
+
 if __name__ == "__main__":
-    main()
+    translate()
