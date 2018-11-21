@@ -20,19 +20,18 @@ def debugger(*msgs):
         print(result)
 
 
-def client(host, port):
-    host = host
-    port = port
-    addr = (host, port)
-    tur = Turbo()
-    turbo_received = Turbo()
+def client(host_ip, host_port):
+    response = Turbo()
+    sign = "+"
+    first = 0
+    second = 0
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
-            s.connect(addr)
+            s.connect((host_ip, host_port))
         except OSError as refused:
-            print(f'Something went wrong: {refused.strerror}, code: [{refused.errno}], address: {addr}')
+            print(f'Something went wrong: {refused.strerror}, code: [{refused.errno}], address: {(host_ip, host_port)}')
         else:
-            print("Connected to", socket.gethostbyaddr(host)[0])
+            print("Connected to", socket.gethostbyaddr(host_ip)[0])
             print("Please always write sign after first number and all separated space: ")
             rand = random.randrange(1, 1024)
             while True:
@@ -62,7 +61,7 @@ def client(host, port):
                         if sign == OPERATORS[7] or sign == OPERATORS[8]:
                             first = int(eq[0])
                             second = 0
-                            if type(eq[0]) == int and (eq[1] == "!" or  eq[1] == "NOT"):
+                            if type(eq[0]) == int and (eq[1] == "!" or eq[1] == "NOT"):
                                 if int(eq[0]) > MAX or int(eq[0]) < MIN:
                                     print("number is too big! expected number between -2147483648 and 2147483647 ")
                                     continue
@@ -76,54 +75,65 @@ def client(host, port):
                     print("That is not valid number.")
                     continue
 
-                temp_items = [sign, first, second]
+                temp_items = (sign, first, second)
                 debugger(temp_items)
 
-                debugger("rand: " + str(rand))
+                debugger("rand:", str(rand))
 
                 try:
-                    tur = Turbo(temp_items[0], 1, rand, True, temp_items[1], temp_items[2])
-                except ValueError as sign_error:
-                    print(f'Something went wrong: {sign_error}')
+                    query = Turbo(temp_items[0], 1, rand, True, temp_items[1], temp_items[2])
+                except ValueError as err:
+                    print(f'Something went wrong: {err}')
                     continue
 
-                debugger("Packet: " + tur.print())
-                s.sendall(tur.pack_packet())
+                debugger("Query to server: " + query.print())
+                try:
+                    s.sendall(query.bytes)
+                except OSError as os_err:
+                    print(f'Something went wrong: {os_err}')
+                    break
 
                 # Odbieranie
-                data_received = s.recv(128)
-                turbo_received.parse_data(data_received)
 
-                if turbo_received.session_id == rand:
-                    if turbo_received.status == 2:
-                        if sign == "!":
-                            print(turbo_received.second)
-                        elif sign == "abs":
-                            print(turbo_received.first)
+                try:
+                    data_received = s.recv(128)
+                    response.parse(data_received)
+                except ValueError as err:
+                    debugger("parsing error")
+                    print(f'Something went wrong: {err}')
+                    continue
+                debugger("response:", response.print())
+
+                if response.session_id != rand:
+                    print("different session id than sent")
+                else:
+                    if response.status == 2:
+                        if sign == OPERATORS[8]:
+                            # factorial
+                            print(first, OPERATORS[8], "=", response.second)
+                        elif sign == OPERATORS[7]:
+                            print("|", first, "|", "=", response.first)
                         else:
-                            print(turbo_received.first)
-                    elif turbo_received.status == 3:
+                            print(first, sign, second, "=", response.first)
+                    elif response.status == 3:
                         print("general error")
                         continue
-                    elif turbo_received.status == 4:
+                    elif response.status == 4:
                         print("error, result is too big")
-                    elif turbo_received.status == 5:
+                    elif response.status == 5:
                         print("error, wrong status")
-                    elif turbo_received.status == 6:
-                        debugger("error, factorial result too big, but still have NOT result")
+                    elif response.status == 6:
+                        debugger("error, factorial result too big, but still have ABS result")
                         if sign == "!":
                             print("error, can't calculate factorial from given argument")
-                        elif sign == "abs":
-                            print(turbo_received.first)
+                        elif sign == OPERATORS[7]:
+                            print("|", first, "|", "=", response.first)
                         else:
-                            print(turbo_received.first)
-                    elif turbo_received.status == 7:
+                            print(first, sign, second, "=", response.first)
+                    elif response.status == 7:
                         print("error, division by 0")
-                else:
-                    print("different session id than sent")
-
             # while end
-            debugger("wyszełem z while")
+            debugger("quiting...")
 
 
 if __name__ == "__main__":

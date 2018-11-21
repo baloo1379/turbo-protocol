@@ -5,55 +5,64 @@ from bitstring import BitArray
 DEBUG = False
 OPERATORS = ["+", "-", "*", "/", "%", "^", "log", "abs", "!"]
 
+
+def debugger(*msgs):
+    if DEBUG:
+        result = "DEBUG:"
+        for el in msgs:
+            result += " "+str(el)
+        print(result)
+
+
 class Turbo:
 
     # offset
     offset = BitArray(uint=0, length=1)
 
-    # length of data
-    length = 32*3
-
     # header and data wrappers
     header = ''
     data = ''
+    bytes = b''
 
-    def __init__(self, operation="+", status=0, session_id=100, extendedarguments=True, first=0, second=0):
+    def __init__(self, operation="+", status=0, session_id=100, second_argument=True, first=0, second=0):
         self.operation = operation
         self.status = status
         self.session_id = session_id
         self.first = first
         self.second = second
-        self.extendedArguments = extendedarguments
+        self.length = 64
+        self.second_argument = second_argument
+        self.set_length(self.second_argument)
+        self.pack()
 
-        # packing after init
-        self.pack_packet()
-
-    def set_length(self, value):
-        self.extendedArguments = value
-        if not self.extendedArguments:
+    def set_length(self, value: bool):
+        self.second_argument = value
+        if not self.second_argument:
             self.length = 64
         else:
             self.length = 96
 
     def pack_data(self):
-        if not self.extendedArguments:
-            self.data = pack("!ii", self.session_id, self.first)
+        if not self.second_argument:
+            self.data = BitArray(bytes=pack("!ii", self.session_id, self.first), length=64)
         else:
-            self.data = pack("!iii", self.session_id, self.first, self.second)
+            self.data = BitArray(bytes=pack("!iii", self.session_id, self.first, self.second), length=96)
 
-    def unpack_data(self):
-        if not self.extendedArguments:
-            data = unpack("!ii", self.data)
+    def unpack_data(self, data: bytes):
+        if not self.second_argument:
+            data = unpack("!ii", data)
             self.session_id = data[0]
             self.first = data[1]
             self.second = 0
         else:
-            data = unpack("!iii", self.data)
+            data = unpack("!iii", data)
             self.session_id = data[0]
             self.first = data[1]
             self.second = data[2]
+        return self.session_id, self.first, self.second
 
-    def pack_packet(self):
+    def pack(self):
+        # packing data
         self.pack_data()
 
         # converting operation to bits
@@ -80,43 +89,50 @@ class Turbo:
 
         # converting status to bits
         status = BitArray(int=self.status, length=4)
-        if not self.extendedArguments:
+
+        # calculating length
+        if not self.second_argument:
             self.length = 64
         else:
             self.length = 96
+        length = BitArray(int=self.length, length=32)
 
         # assembling header
-        header = operation + status + BitArray(int=self.length, length=32) + self.offset
-        self.header = header.bytes
-        if DEBUG:
-            print(type(header), type(self.header))
-        # assembling packet
-        packet = self.header + self.data
-        if DEBUG:
-            print("packet:", packet)
+        header = operation + status + length
+
+        # assembling query
+        debugger("assembling query", operation.int, status.int, length.int, self.unpack_data(self.data.tobytes()), self.offset.int)
+        bit_packet = header + self.data + self.offset
+        packet = bit_packet.tobytes()
+        self.bytes = packet
+        debugger("query  ", packet)
         return packet
 
-    def parse_data(self, data):
-        self.data = BitArray(data)
-        if DEBUG:
-            print(self.data.bin)
-        header = self.data[0:40]
-        self.data = self.data[40:].bytes
+    def parse(self, raw_data: bytes):
+        # converting bytes into BitArray
+        bit_data = BitArray(raw_data)
+        debugger("payload ", bit_data.bin, len(bit_data.bin), "bits")
 
-        if DEBUG:
-            print("header + data:", header.bin, data)
-            print("header values:", header[0:3].uint, header[3:7].uint, header[7:-1].int, int(header[-1]))
+        # trim header and data
+        header = bit_data[0:39]
+        data = bit_data[39:-1]
+        debugger("header  ", header.bin, len(header.bin), "bits")
+        debugger("data    ", data.bin, len(data.bin), "bits")
 
+        # parse header
         operation = header[0:3].uint
-        self.status = header[3:7].int
-        self.length = header[7:-1].int
-        if self.length == 96:
-            self.extendedArguments = True
-        elif self.length == 64:
-            self.extendedArguments = False
+        status = header[3:7].int
+        length = header[7:].int
+
+        # set length
+        if length == 96:
+            self.set_length(True)
+        elif length == 64:
+            self.set_length(False)
         else:
             raise ValueError("Unknown length")
 
+        # set operation
         if operation == 0:
             self.operation = OPERATORS[0]
         elif operation == 1:
@@ -136,41 +152,32 @@ class Turbo:
         else:
             raise ValueError(f'Wrong operation sign')
 
-        self.unpack_data()
+        # set status
+        self.status = status
+
+        # unpacking and setting data
+        self.unpack_data(data.tobytes())
 
     def print(self):
-        if DEBUG:
-            print(self.operation, self.status, self.session_id, self.extendedArguments, self.first, self.second)
-        return str(f"{self.operation}, {self.status}, {self.session_id}, {self.extendedArguments}, {self.first}, {self.second}")
+        return str(f"{self.operation}, {self.status}, {self.length}, {self.session_id}, {self.second_argument}, "
+                   f"{self.first}, {self.second}")
 
 
 def main():
     # only for testing
-    f_packet = Turbo("+", 7, 1997, True, 564, 85)
-    x2 = Turbo("-", 7, 1997, True, 452, 654)
-    x3 = Turbo("*", 7, 1997, True, 15, 5)
-    x4 = Turbo("/", 7, 1997, True, 25, 5)
-    x5 = Turbo("%", 7, 1997, True, 25, 6)
-    x6 = Turbo("^", 7, 1997, True, 2, 8)
-    x7 = Turbo("log", 7, 1997, True, 3, 8)
-    x8 = Turbo("abs", 7, 1997, False, 25, 0)
-    x9 = Turbo("abs", 7, 1997, True, 0, 5)
+    x = Turbo("+", 7, 1997, True, 564, 85), Turbo("-", 7, 1997, True, 452, 654), Turbo("*", 7, 1997, True, 15, 5), \
+        Turbo("/", 7, 1997, True, 25, 5), Turbo("%", 7, 1997, True, 25, 6), Turbo("^", 7, 1997, True, 2, 8), \
+        Turbo("log", 7, 1997, True, 3, 8), Turbo("abs", 7, 1997, False, 25, 0), Turbo("abs", 7, 1997, True, 0, 5)
 
-    f_packet.print()
-    s_packet = Turbo()
-    print(f_packet.pack_packet())
-    print(len(f_packet.pack_packet()))
-    s_packet.parse_data(f_packet.pack_packet())
-    print(len(s_packet.pack_packet()))
-    s_packet.print()
-
-    s_packet.extendedArguments = False
-    print("***")
-    print(len(s_packet.pack_packet()))
-    s_packet.print()
-
-    f_packet.parse_data(s_packet.pack_packet())
-    f_packet.print()
+    packet = Turbo()
+    for el in x:
+        proto_bytes = el.pack()
+        try:
+            packet.parse(proto_bytes)
+        except ValueError as err:
+            print(err)
+        else:
+            print(packet.print())
 
 
 def translate():
@@ -183,9 +190,10 @@ def translate():
     x = bytes(raw_data)
     print(x)
     packet = Turbo()
-    packet.parse_data(x)
+    packet.parse(x)
     print(packet.print())
 
 
 if __name__ == "__main__":
-    translate()
+    DEBUG = True
+    main()

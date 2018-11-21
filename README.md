@@ -35,18 +35,17 @@ Features:
     * field of the first argument - 32 bits
     * field of the second argument - 32 bits
     
-## Header
+## Structure of protocol
 
-|0-2|3-6|7-38|39|
-|:----:|:-----:|:-----:|:-----:|
-|operation|status|length|offset|
+| offset | length (bits) | field |
+|:---:|:---:|:--------:|
+|  0  |   3 | operation|
+|  3  |   4 | status |
+|  7  |  32 | length |
+|  39 |  32 | session id|
+|  71 |  32 | first argument|
+| 104 |  32 | second argument|
+| 136 |   1 | offset |
 
-## Data
-
-| 0-31 |
-|:----:|
-|session id|
-|first argument|
-|second argument|
 
 
