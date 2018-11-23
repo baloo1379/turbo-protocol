@@ -28,7 +28,7 @@ Features:
     * `0101` `5` - error - wrong status
     * `0110` `6` - error - factorial too big
     * `0111` `7` - error - division by 0
-    * `1000` `8` - 
+    * `1000` `8` - error - wrong logarithm base or argument
 
 3. Data length field - a 32-bit field containing information about the length of the data field.
 4. Data field - the field where the information is located:
