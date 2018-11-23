@@ -32,7 +32,7 @@ def client(host_ip, host_port):
             print(f'Something went wrong: {refused.strerror}, code: [{refused.errno}], address: {(host_ip, host_port)}')
         else:
             print("Connected to", socket.gethostbyaddr(host_ip)[0])
-            print("Please always write sign after first number and all separated space: ")
+            print("Please always write sign after first number and all separated space(only integers): ")
             rand = random.randrange(1, 1024)
             while True:
 
