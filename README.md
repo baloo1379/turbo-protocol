@@ -28,7 +28,7 @@ Features:
     * `0101` `5` - error - wrong status
     * `0110` `6` - error - factorial too big
     * `0111` `7` - error - division by 0
-    * `1000` `8` - error - wrong logarithm base or argument
+    * `1000` `8` - error - wrong logarithm  base or argument
 
 3. Data length field - a 32-bit field containing information about the length of the data field.
 4. Data field - the field where the information is located:
@@ -38,15 +38,21 @@ Features:
     
 ## Structure of protocol
 
-| offset | length (bits) | field |
-|:---:|:---:|:--------:|
-|  0  |   3 | operation|
-|  3  |   4 | status |
-|  7  |  32 | length |
-|  39 |  32 | session id|
-|  71 |  32 | first argument|
-| 104 |  32 | second argument|
-| 136 |   1 | offset |
+|  length | field                     |
+|:-------:|:-------------------------:|
+|       3 | operation                 |
+|       4 | status                    |
+|      32 | length                    |
+|       1 | session field exists      |
+|       8 | session id length         |
+|  16-128 | session id                |
+|       1 | first field exists        |
+|       8 | first argument length     |
+|  16-128 | first argument            |
+|       1 | second field exists       |
+|       8 | second argument length    |
+|  16-128 | second argument           |
+| dynamic | offset                    |
 
 
 
