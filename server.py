@@ -102,9 +102,15 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                 elif query.operation == OPERATORS[4]:
                     query.first = int(query.first % query.second)
                 elif query.operation == OPERATORS[5]:
-                    query.first = int(pow(query.first, query.second))
+                    try:
+                        query.first = int(pow(query.first, query.second))
+                    except OverflowError as err:
+                        errors = 4
                 elif query.operation == OPERATORS[6]:
-                    query.first = int(log(query.second, query.first))
+                    try:
+                        query.first = int(log(query.second, query.first))
+                    except ValueError as err:
+                        errors = 8
                 elif query.operation == OPERATORS[7]:
                     # unless the operation is abs or factorial
                     if query.first > 0:
@@ -156,6 +162,16 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                     # otherwise handle errors
                     debugger(f"Error code:", errors)
                     query.status = 7
+                    query.first = 0
+                    query.second = 0
+                    query.set_length(False)
+                    # send error
+                    debugger("Error response:", query.print())
+
+                elif errors == 8:
+                    # otherwise handle errors
+                    debugger(f"Error code:", errors)
+                    query.status = 8
                     query.first = 0
                     query.second = 0
                     query.set_length(False)

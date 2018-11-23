@@ -88,14 +88,14 @@ class Turbo:
             raise ValueError(f'Wrong operation sign: {self.operation}')
 
         # converting status to bits
-        status = BitArray(int=self.status, length=4)
+        status = BitArray(uint=self.status, length=4)
 
         # calculating length
         if not self.second_argument:
             self.length = 64
         else:
             self.length = 96
-        length = BitArray(int=self.length, length=32)
+        length = BitArray(uint=self.length, length=32)
 
         # assembling header
         header = operation + status + length
@@ -121,8 +121,8 @@ class Turbo:
 
         # parse header
         operation = header[0:3].uint
-        status = header[3:7].int
-        length = header[7:].int
+        status = header[3:7].uint
+        length = header[7:].uint
 
         # set length
         if length == 96:
