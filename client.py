@@ -132,6 +132,11 @@ def client(host_ip, host_port):
                             print(first, sign, second, "=", response.first)
                     elif response.status == 7:
                         print("error, division by 0")
+                    elif response.status == 8:
+                        print("error, bad base or argument ")
+                    else:
+                        print("client error")
+                        break
             # while end
             debugger("quiting...")
 
