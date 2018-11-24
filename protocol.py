@@ -1,7 +1,7 @@
 from bitstring import BitArray
 
 
-DEBUG = True
+DEBUG = False
 OPERATORS = ["+", "-", "*", "/", "%", "^", "log", "abs", "!"]
 MAX_INT = int(9223372036854775807)
 MIN_INT = int(-9223372036854775808)
@@ -78,6 +78,7 @@ class Turbo:
 
     def pack_data(self, elements: tuple):
         debugger("---- packing data ----")
+        self.length = 0
         for el in elements:
             temp = self.pack_field(el)
             self.length += temp[-1]
@@ -231,7 +232,7 @@ def main():
 
 def translate():
     data = input()
-    bin_data = BitArray(bin=data)
+    bin_data = BitArray(hex=data)
     print(bin_data.bin)
 
     packet = Turbo(parse=bin_data.tobytes())
@@ -239,4 +240,4 @@ def translate():
 
 
 if __name__ == "__main__":
-    main()
+    translate()

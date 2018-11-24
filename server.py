@@ -1,17 +1,13 @@
 import socketserver
 import socket
-import copy
 import sys
 from math import factorial, pow, log, fabs
-from protocol import Turbo, OPERATORS
+from protocol import Turbo, OPERATORS, MIN_INT, MAX_INT
 
 
 DEBUG = False
 
 HOST, PORT = "localhost", 9999
-
-MAX_INT = 2147483647
-MIN_INT = -2147483648
 
 GENERAL_ERROR = Turbo("+", 3, 0, False, 0, 0)
 SIZE_ERROR = Turbo("+", 4, 0, False, 0, 0)
@@ -41,7 +37,7 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
             # receiving data
             try:
-                data_received = self.request.recv(8192)
+                data_received = self.request.recv(512)
                 debugger("Data received")
             except OSError as os_err:
                 print(f'Something went wrong: {os_err}')
@@ -86,104 +82,94 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
 
                 # response will be only one argument
                 #  unless the operation is not or factorial
-                query.set_length(False)
+                result = 0
+                result2 = 0
+                operation = query.operation
 
-                if query.operation == OPERATORS[0]:
-                    query.first = query.first + query.second
-                elif query.operation == OPERATORS[1]:
-                    query.first = query.first - query.second
-                elif query.operation == OPERATORS[2]:
-                    query.first = query.first * query.second
-                elif query.operation == OPERATORS[3]:
+                if operation == OPERATORS[0]:
+                    result = query.first + query.second
+                elif operation == OPERATORS[1]:
+                    result = query.first - query.second
+                elif operation == OPERATORS[2]:
+                    result = query.first * query.second
+                elif operation == OPERATORS[3]:
                     if query.second == 0:
                         errors = 7
                     else:
-                        query.first = int(query.first / query.second)
-                elif query.operation == OPERATORS[4]:
-                    query.first = int(query.first % query.second)
-                elif query.operation == OPERATORS[5]:
+                        result = int(query.first / query.second)
+                elif operation == OPERATORS[4]:
+                    result = int(query.first % query.second)
+                elif operation == OPERATORS[5]:
                     try:
-                        query.first = int(pow(query.first, query.second))
+                        result = int(pow(query.first, query.second))
                     except OverflowError as err:
                         errors = 4
-                elif query.operation == OPERATORS[6]:
+                elif operation == OPERATORS[6]:
                     try:
-                        query.first = int(log(query.second, query.first))
+                        result = int(log(query.second, query.first))
                     except ValueError as err:
                         errors = 8
-                elif query.operation == OPERATORS[7]:
+                elif operation == OPERATORS[7]:
                     # unless the operation is abs or factorial
                     if query.first > 0:
-                        query.second = factorial(query.first)
-                        query.set_length(True)
+                        result2 = factorial(query.first)
                     else:
                         errors = 6
-                    query.first = int(fabs(query.first))
+                        result = int(fabs(query.first))
 
                 # checking if result isn't too big or too small
-                if query.first > MAX_INT:
+                if result > MAX_INT:
                     debugger("Result too big for 32bit int")
                     errors = 4
-                if query.first < MIN_INT:
+                if result < MIN_INT:
                     debugger("Result too small for 32bit int")
                     errors = 4
-                if query.second > MAX_INT:
+                if result2 > MAX_INT:
                     debugger("Factorial too big for 32bit int")
                     errors = 6
-                if query.second < MIN_INT:
+                if result2 < MIN_INT:
                     debugger("Factorial too small for 32bit int")
                     errors = 6
 
                 # if there is no errors prepare query
+                # otherwise handle error
                 if errors == 0:
                     debugger("No errors, sending")
-                    query.status = 2
-
-                elif errors == 4:
-                    # otherwise handle errors
-                    debugger(f"Error code:", errors)
-                    query.status = 4
-                    query.first = 0
-                    query.second = 0
-                    query.set_length(False)
-                    # send error
-                    debugger("Error response:", query.print())
+                    status = 2
 
                 elif errors == 6:
-                    # otherwise handle errors
+                    # factorial too big
                     debugger(f"Error code:", errors)
-                    query.status = 6
-                    query.second = 0
-                    query.set_length(False)
-                    # send error
-                    debugger("Error response:", query.print())
+                    status = 6
+                    result2 = 0
 
-                elif errors == 7:
-                    # otherwise handle errors
+                else:
                     debugger(f"Error code:", errors)
-                    query.status = 7
-                    query.first = 0
-                    query.second = 0
-                    query.set_length(False)
-                    # send error
-                    debugger("Error response:", query.print())
+                    status = errors
+                    result = 0
+                    result2 = 0
 
-                elif errors == 8:
-                    # otherwise handle errors
-                    debugger(f"Error code:", errors)
-                    query.status = 8
-                    query.first = 0
-                    query.second = 0
-                    query.set_length(False)
-                    # send error
-                    debugger("Error response:", query.print())
+                # elif errors == 7:
+                #     # division by 0
+                #     debugger(f"Error code:", errors)
+                #     status = errors
+                #     result = 0
+                #     result2 = 0
+                #
+                # elif errors == 8:
+                #     # logarithm
+                #     debugger(f"Error code:", errors)
+                #     status = errors
+                #     result = 0
+                #     result2 = 0
 
-                debugger("Length of prepared response:", len(query.pack()))
-                debugger("Response:", query.print())
+                response = Turbo(operation, status, session_id, result, result2)
+                debugger("Length of prepared response:", len(response.pack()))
+                debugger("Response:", response.print())
 
                 try:
-                    self.request.sendall(query.pack())
-                except OSError as err:
+                    self.request.sendall(response.pack())
+                except OSError as os_err:
                     print(f'Something went wrong: {os_err}')
                     break
 
