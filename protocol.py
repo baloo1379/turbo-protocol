@@ -27,7 +27,7 @@ def str_padded(msg: str):
 
 class Turbo:
 
-    def __init__(self, operation="+", status=0, session_id=100, first=0, second=0, parse=b''):
+    def __init__(self, operation="+", status=0, session_id=0, first=0, second=0, parse=b''):
         self.operation = operation
         self.status = int(status)
         self.session_id = int(session_id)
@@ -78,6 +78,7 @@ class Turbo:
 
     def pack_data(self, elements: tuple):
         debugger("---- packing data ----")
+        self.data = BitArray(length=0)
         self.length = 0
         for el in elements:
             temp = self.pack_field(el)
@@ -143,17 +144,16 @@ class Turbo:
         status = BitArray(uint=self.status, length=4)
 
         # calculating length
-        # if not self.second_argument:
-        #     self.length = 64
-        # else:
-        #     self.length = 96
-        length = BitArray(uint=self.length, length=32)
+        offset = 8 - (39 + self.length) % 8
+        debugger(str_padded("offset"), offset)
+        length = BitArray(uint=self.length+offset, length=32)
 
         # assembling header
         header = operation + status + length
 
         # assembling query
-        debugger(str_padded("assembling query"), operation.uint, status.uint, length.uint, self.unpack_data(self.data.tobytes()))
+        debugger(str_padded("assembling query"), operation.uint, status.uint, length.uint,
+                 self.unpack_data(self.data.tobytes()))
         bit_packet = header + self.data
         debugger(str_padded("query bits"), bit_packet.bin, len(bit_packet.bin), "bits")
         packet = bit_packet.tobytes()
@@ -219,15 +219,9 @@ def main():
         Turbo("/", 7, 103, 256, 70000000), Turbo("%", 7, 104, 131071, 17592186044415), Turbo("^", 7, 105, 2, 8), \
         Turbo("log", 7, 106, 3, 8), Turbo("abs", 7, 107, 25, 0), Turbo("abs", 7, 108, 0, 5)
 
-    packet = Turbo()
-    for el in x:
-        proto_bytes = el.pack()
-        try:
-            packet.parse(proto_bytes)
-        except ValueError as err:
-            print(err)
-        else:
-            print(packet.print())
+    packet = x[3]
+    print()
+    packet.parse(packet.pack())
 
 
 def translate():
@@ -240,4 +234,4 @@ def translate():
 
 
 if __name__ == "__main__":
-    translate()
+    main()
