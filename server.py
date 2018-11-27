@@ -111,11 +111,11 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                         errors = 8
                 elif operation == OPERATORS[7]:
                     # unless the operation is abs or factorial
-                    if query.first > 0:
+                    if 0 < query.first < 21:
                         result2 = factorial(query.first)
                     else:
                         errors = 6
-                        result = int(fabs(query.first))
+                    result = int(fabs(query.first))
 
                 # checking if result isn't too big or too small
                 if result > MAX_INT:
@@ -148,20 +148,6 @@ class TurboProtocolTCPHandler(socketserver.StreamRequestHandler):
                     status = errors
                     result = 0
                     result2 = 0
-
-                # elif errors == 7:
-                #     # division by 0
-                #     debugger(f"Error code:", errors)
-                #     status = errors
-                #     result = 0
-                #     result2 = 0
-                #
-                # elif errors == 8:
-                #     # logarithm
-                #     debugger(f"Error code:", errors)
-                #     status = errors
-                #     result = 0
-                #     result2 = 0
 
                 response = Turbo(operation, status, session_id, result, result2)
                 debugger("Length of prepared response:", len(response.pack()))
