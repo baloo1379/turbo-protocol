@@ -1,15 +1,15 @@
 import socket
 import random
 import sys
-from protocol import Turbo, OPERATORS
+from protocol import Turbo, OPERATORS, MAX_INT, MIN_INT
 
 
 DEBUG = False
 
 HOST, PORT = "localhost", 9999
 
-MIN = -2147483648
-MAX = 2147483647
+MIN = MIN_INT
+MAX = MAX_INT
 
 
 def debugger(*msgs):
@@ -81,7 +81,7 @@ def client(host_ip, host_port):
                 debugger("rand:", str(rand))
 
                 try:
-                    query = Turbo(temp_items[0], 1, rand, True, temp_items[1], temp_items[2])
+                    query = Turbo(temp_items[0], 1, rand, temp_items[1], temp_items[2])
                 except ValueError as err:
                     print(f'Something went wrong: {err}')
                     continue
@@ -96,7 +96,7 @@ def client(host_ip, host_port):
                 # Odbieranie
 
                 try:
-                    data_received = s.recv(128)
+                    data_received = s.recv(512)
                     response.parse(data_received)
                 except ValueError as err:
                     debugger("parsing error")

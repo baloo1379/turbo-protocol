@@ -28,25 +28,38 @@ Features:
     * `0101` `5` - error - wrong status
     * `0110` `6` - error - factorial too big
     * `0111` `7` - error - division by 0
-    * `1000` `8` - error - wrong logarithm base or argument
+    * `1000` `8` - error - wrong logarithm  base or argument
 
 3. Data length field - a 32-bit field containing information about the length of the data field.
+
 4. Data field - the field where the information is located:
-    * session number field - 32 bits
-    * field of the first argument - 32 bits
-    * field of the second argument - 32 bits
+   * session exists - `bool` - 1 bit
+   * session length - `short unsigned int` - 8 bit
+   * session number field - `int` variable size - 16-64 bits
+   * first argument exists - `bool` - 1 bit
+   * first argument length - `short unsigned int` - 8 bit
+   * field of the first argument - `int` variable size - 16-64 bits
+   * second argument exists - `bool` - 1 bit
+   * second argument length - `short unsigned int` - 8 bit
+   * field of the second argument - `int` variable size - 16-64 bits
     
 ## Structure of protocol
 
-| offset | length (bits) | field |
-|:---:|:---:|:--------:|
-|  0  |   3 | operation|
-|  3  |   4 | status |
-|  7  |  32 | length |
-|  39 |  32 | session id|
-|  71 |  32 | first argument|
-| 104 |  32 | second argument|
-| 136 |   1 | offset |
+|  length | field                     |
+|:-------:|:-------------------------:|
+|       3 | operation                 |
+|       4 | status                    |
+|      32 | length                    |
+|       1 | session field exists      |
+|       8 | session id length         |
+|   16-64 | session id                |
+|       1 | first field exists        |
+|       8 | first argument length     |
+|   16-64 | first argument            |
+|       1 | second field exists       |
+|       8 | second argument length    |
+|   16-64 | second argument           |
+|     0-8 | offset                    |
 
 
 
