@@ -38,9 +38,10 @@ def client(host_ip, host_port):
 
                 # Wysyłanie
                 eq = input()
-                if eq == "EXIT" or eq == "Exit" or eq == "exit":
+                eq = eq.strip()
+                if eq.upper() == "EXIT":
                     s.shutdown(socket.SHUT_RDWR)
-                    print("exiting successful")
+                    print("exiting...")
                     break
 
                 eq = eq.split(" ")
@@ -147,5 +148,5 @@ if __name__ == "__main__":
     port = int(args[2]) if len(args) > 2 else PORT
 
     client(host, port)
-    input("Press ENTER to continue...")
+    input("Press ENTER to exit...")
     sys.exit()
