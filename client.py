@@ -4,7 +4,7 @@ import sys
 from protocol import Turbo, OPERATORS, MAX_INT, MIN_INT
 
 
-DEBUG = False
+DEBUG = True
 
 HOST, PORT = "localhost", 9999
 
@@ -62,7 +62,7 @@ def client(host_ip, host_port):
                         if sign == OPERATORS[7] or sign == OPERATORS[8]:
                             first = int(eq[0])
                             second = 0
-                            if type(eq[0]) == int and (eq[1] == "!" or eq[1] == "NOT"):
+                            if type(eq[0]) == int and (eq[1] == OPERATORS[7] or eq[1] == OPERATORS[8]):
                                 if int(eq[0]) > MAX or int(eq[0]) < MIN:
                                     print("number is too big! expected number between -2147483648 and 2147483647 ")
                                     continue

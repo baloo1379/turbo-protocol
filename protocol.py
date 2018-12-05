@@ -1,7 +1,7 @@
 from bitstring import BitArray
 
 
-DEBUG = False
+DEBUG = True
 OPERATORS = ["+", "-", "*", "/", "%", "^", "log", "abs", "!"]
 MAX_INT = int(9223372036854775807)
 MIN_INT = int(-9223372036854775808)
