@@ -1,4 +1,4 @@
-+++++++# turbo-protocol
+# turbo-protocol
 Simple protocol for CS studies on PUT
 
 Features:
